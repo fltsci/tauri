@@ -70,6 +70,7 @@ macos-private-api = [
 # TODO: Remove in v3 - wry does not have this feature anymore
 objc-exception = []
 tracing = ["dep:tracing", "wry/tracing"]
+tracing-borrows = ["dep:tracing"]
 macos-proxy = ["wry/mac-proxy"]
 unstable = []
 common-controls-v6 = []

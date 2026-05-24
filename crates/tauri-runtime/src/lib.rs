@@ -167,6 +167,8 @@ pub enum Error {
   FailedToRemoveDataStore,
   #[error("Could not find the webview runtime, make sure it is installed")]
   WebviewRuntimeNotInstalled,
+  #[error("WindowsStore: {0}")]
+  WindowsStore(Box<dyn std::error::Error + Send + Sync>),
 }
 
 /// Result type.
