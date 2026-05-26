@@ -925,7 +925,17 @@ impl<R: Runtime> PluginStore<R> {
            script,
            for_main_frame_only,
          }| InitializationScript {
-          script: format!("(function () {{ {script} }})();"),
+          // Guard plugin init against contexts where `__TAURI_INTERNALS__`
+          // is not established (notably the isolation iframe in WebView2,
+          // where the core init scripts do not always propagate to the
+          // sandboxed subframe). Plugin inits only set fields on
+          // `__TAURI_INTERNALS__.plugins`, which iframes do not consume,
+          // so skipping is safe and silences errors like
+          // "Cannot read properties of undefined (reading 'plugins')"
+          // from `path/init.js`.
+          script: format!(
+            "(function () {{ if (!window.__TAURI_INTERNALS__) return; {script} }})();"
+          ),
           for_main_frame_only,
         },
       )
