@@ -1736,6 +1736,34 @@ tauri::Builder::default()
 
         local
       })
+
+      // or from the isolation iframe. Its URI-scheme handler is registered
+      // per-window (see manager/webview.rs), not in the manager's global
+      // protocol map, so the user-protocol check above misses it.
+      || ({
+        #[cfg(feature = "isolation")]
+        {
+          if let crate::Pattern::Isolation { schema, .. } = &*self.manager().pattern {
+            #[cfg(any(windows, target_os = "android"))]
+            let isolation_local = {
+              let expected_domain =
+                format!("{schema}.{}", crate::pattern::ISOLATION_IFRAME_SRC_DOMAIN);
+              current_url.scheme() == self.manager().tauri_protocol_url(uses_https).scheme()
+                && current_url.domain() == Some(expected_domain.as_str())
+            };
+            #[cfg(all(not(windows), not(target_os = "android")))]
+            let isolation_local = current_url.scheme() == schema.as_str()
+              && current_url.domain() == Some(crate::pattern::ISOLATION_IFRAME_SRC_DOMAIN);
+            isolation_local
+          } else {
+            false
+          }
+        }
+        #[cfg(not(feature = "isolation"))]
+        {
+          false
+        }
+      })
   }
 
   /// Handles this window receiving an [`InvokeRequest`].
