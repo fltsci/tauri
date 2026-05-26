@@ -165,16 +165,20 @@ impl<R: Runtime> WebviewManager<R> {
 
     all_initialization_scripts.push(main_frame_script(
       r"
-        Object.defineProperty(window, 'isTauri', {
-          value: true,
-        });
-
         if (!window.__TAURI_INTERNALS__) {
           Object.defineProperty(window, '__TAURI_INTERNALS__', {
             value: {
               plugins: {}
             }
           })
+        }
+
+        if (window.isTauri === undefined) {
+          try {
+            Object.defineProperty(window, 'isTauri', {
+              value: true,
+            });
+          } catch (e) {}
         }
       "
       .to_owned(),
