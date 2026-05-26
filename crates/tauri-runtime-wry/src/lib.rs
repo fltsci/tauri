@@ -4471,10 +4471,19 @@ fn handle_event_loop<T: UserEvent>(
         _ => unreachable!(),
       };
 
-      let windows_ref = windows.0.borrow();
-      windows_ref.values().for_each(|window| {
-        let label = window.label.clone();
-        let window_event_listeners = window.window_event_listeners.clone();
+      let snapshots = match windows.store(|s| {
+        s.values()
+          .map(|w| (w.label.clone(), w.window_event_listeners.clone()))
+          .collect::<Vec<_>>()
+      }) {
+        Ok(v) => v,
+        Err(e) => {
+          log::error!("failed to read windows store on mobile resume/suspend: {e}");
+          return;
+        }
+      };
+
+      for (label, window_event_listeners) in snapshots {
         let listeners = window_event_listeners.lock().unwrap();
         for handler in listeners.values() {
           handler(&event);
@@ -4484,9 +4493,7 @@ fn handle_event_loop<T: UserEvent>(
           label,
           event: event.clone(),
         });
-      });
-
-      drop(windows_ref);
+      }
     }
     _ => (),
   }

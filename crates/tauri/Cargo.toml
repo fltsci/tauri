@@ -61,7 +61,9 @@ tauri-macros = { version = "2.6.2", path = "../tauri-macros" }
 tauri-utils = { version = "2.9.2", features = [
   "resources",
 ], path = "../tauri-utils" }
-tauri-runtime-wry = { version = "2.11.2", path = "../tauri-runtime-wry", default-features = false, optional = true, features = ["tracing-borrows"] }
+tauri-runtime-wry = { version = "2.11.2", path = "../tauri-runtime-wry", default-features = false, optional = true, features = [
+  "tracing-borrows",
+] }
 getrandom = "0.3"
 serde_repr = "0.1"
 http = "1"
