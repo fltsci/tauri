@@ -3765,7 +3765,7 @@ fn handle_user_message<T: UserEvent>(
         }
       }
 
-      let window_and_webview = windows.window(window_id, |window| {
+      let window_and_webview = match windows.window(window_id, |window| {
         window.inner.clone().zip(
           window
             .webviews
@@ -3773,9 +3773,18 @@ fn handle_user_message<T: UserEvent>(
             .find(|wv| wv.id == webview_id)
             .cloned(),
         )
-      });
+      }) {
+        Ok(found) => found,
+        // A message queued for a webview that has since closed is routine.
+        Err(windows_store::Error::WindowNotFound(_)) => None,
+        // Any other failure drops the message, and this is its only trace.
+        Err(e) => {
+          log::error!("dropped a message for webview {webview_id} on window {window_id:?}: {e}");
+          None
+        }
+      };
 
-      if let Ok(Some((window, webview))) = window_and_webview {
+      if let Some((window, webview)) = window_and_webview {
         match webview_message {
           WebviewMessage::WebviewEvent(_) => { /* already handled */ }
           WebviewMessage::SynthesizedWindowEvent(_) => { /* already handled */ }
